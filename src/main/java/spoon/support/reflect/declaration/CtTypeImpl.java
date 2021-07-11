@@ -264,7 +264,7 @@ public abstract class CtTypeImpl<T> extends CtNamedElementImpl implements CtType
 
 	@Override
 	public <N> boolean removeNestedType(CtType<N> nestedType) {
-		if(!removeTypeMember(nestedType)) {
+		if (!removeTypeMember(nestedType)) {
 			return false;
 		}
 
