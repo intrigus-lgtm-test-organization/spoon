@@ -25,16 +25,19 @@ import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtEnum;
 import spoon.reflect.declaration.CtInterface;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeParameter;
+import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.reflect.visitor.filter.TypeFilter;
+import spoon.support.reflect.CtExtendedModifier;
 import spoon.test.ctType.testclasses.X;
 
 import java.util.Arrays;
@@ -295,5 +298,47 @@ public class CtTypeTest {
 				equalTo(expectedNumExecutablesInJDK8),
 				equalTo(expectedNumExecutablesPostJDK8))
 		);	
+	}
+
+	@Test
+	public void testNestedEnumHasImplicitStaticModifier() {
+		// contract: nested enum types are implicitly static
+		// (https://docs.oracle.com/javase/specs/jls/se16/html/jls-8.html#jls-8.9)
+		Launcher launcher = new Launcher();
+		launcher.addInputResource("src/test/resources/nestedEnum");
+		CtModel model = launcher.buildModel();
+		List<CtType<?>> enums = model.getAllTypes()
+				.stream()
+				.flatMap(it -> it.getNestedTypes().stream())
+				.filter(it -> it instanceof CtEnum)
+				.collect(Collectors.toList());
+
+		assertEquals(4, enums.size());
+		for (CtType<?> anEnum : enums) {
+			assertTrue("Enum " + anEnum.getQualifiedName() + " is not static", anEnum.isStatic());
+			CtExtendedModifier modifier = anEnum.getExtendedModifiers()
+					.stream()
+					.filter(it -> it.getKind() == ModifierKind.STATIC)
+					.findAny()
+					.get();
+			assertTrue(
+					"Enum " + anEnum.getQualifiedName() + " has explicit modifier",
+					modifier.isImplicit()
+			);
+		}
+	}
+
+	@Test
+	public void testNestedEnumImplicitStaticModifierIsRemovedWhenEnumIsRemoved() {
+		// contract: nested enum's static modifier is removed when they are removed from their parent
+		Factory factory = createFactory();
+		CtClass<?> enclosingClass = factory.Class().create("foo.Bar");
+		CtClass<?> nestedEnum = factory.Enum().create("foo.Bar$Inner");
+		enclosingClass.addNestedType(nestedEnum);
+
+		assertTrue("Enum wasn't made static", nestedEnum.isStatic());
+		enclosingClass.removeNestedType(nestedEnum);
+
+		assertFalse("static modifier wasn't removed", nestedEnum.isStatic());
 	}
 }
