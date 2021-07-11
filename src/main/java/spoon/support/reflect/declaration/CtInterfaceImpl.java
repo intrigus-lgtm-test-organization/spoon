@@ -64,6 +64,10 @@ public class CtInterfaceImpl<T> extends CtTypeImpl<T> implements CtInterface<T> 
 	public <N, C extends CtType<T>> C addNestedType(CtType<N> nestedType) {
 		super.addNestedType(nestedType);
 
+		if (nestedType == null) {
+			return (C) this;
+		}
+
 		// Type members of interfaces are implicitly public static. We need to add the implicit
 		// modifiers if they aren't public static already.
 		Set<CtExtendedModifier> modifiers = new HashSet<>(nestedType.getExtendedModifiers());
