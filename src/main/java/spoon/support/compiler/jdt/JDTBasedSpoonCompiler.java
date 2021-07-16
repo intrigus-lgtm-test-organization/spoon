@@ -7,6 +7,7 @@
  */
 package spoon.support.compiler.jdt;
 
+import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.IProblem;
@@ -400,7 +401,12 @@ public class JDTBasedSpoonCompiler implements spoon.SpoonModelBuilder {
 				complianceOptions.enablePreview();
 			}
 			AdvancedOptions advancedOptions = new AdvancedOptions().preserveUnusedVars().continueExecution().enableJavadoc();
-			SourceOptions sourceOptions = new SourceOptions().sources(sourceFiles);
+			SourceOptions sourceOptions = new SourceOptions().sources(
+					sourceFiles
+							.stream()
+							.filter(it -> !it.getName().contains("module-info"))
+							.collect(Collectors.toList())
+			);
 			args = new JDTBuilderImpl()
 					.classpathOptions(classpathOptions)
 					.complianceOptions(complianceOptions)
