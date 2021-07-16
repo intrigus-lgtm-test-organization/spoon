@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 import spoon.reflect.declaration.CtModule;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.declaration.CtPackageDeclaration;
@@ -164,6 +165,24 @@ public class PackageFactory extends SubFactory {
 				.filter(Objects::nonNull)
 				.findFirst()
 				.orElse(null);
+	}
+
+	/**
+	 * Gets a package.
+	 *
+	 * @param qualifiedName
+	 * 		the package to search
+	 * @return a found package or null
+	 */
+	public List<CtPackage> gets(String qualifiedName) {
+		if (qualifiedName.contains(CtType.INNERTTYPE_SEPARATOR)) {
+			throw new RuntimeException("Invalid package name " + qualifiedName);
+		}
+
+		return factory.getModel().getAllModules().stream()
+				.map(module -> getPackageFromModule(qualifiedName, module))
+				.filter(Objects::nonNull)
+				.collect(Collectors.toList());
 	}
 
 	/**
