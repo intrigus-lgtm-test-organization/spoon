@@ -17,6 +17,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
+import java.util.function.Function;
 import spoon.SpoonException;
 import spoon.support.modelobs.FineModelChangeListener;
 import spoon.reflect.declaration.CtElement;
@@ -128,27 +129,12 @@ public abstract class ModelSet<T extends CtElement> extends AbstractSet<T> imple
 
 	@Override
 	public Iterator<T> iterator() {
-		return new Itr();
+		throw new UnsupportedOperationException("Please use iterate(Consumer)");
 	}
 
-	private class Itr implements Iterator<T> {
-		final Iterator<T> delegate;
-		T lastReturned = null;
-		Itr() {
-			delegate = set.iterator();
-		}
-		@Override
-		public boolean hasNext() {
-			return delegate.hasNext();
-		}
-		@Override
-		public T next() {
-			lastReturned = delegate.next();
-			return lastReturned;
-		}
-		@Override
-		public void remove() {
-			ModelSet.this.remove(lastReturned);
+	public <R> R acceptSynchronized(Function<Set<T>, R> function) {
+		synchronized (set) {
+			return function.apply(set);
 		}
 	}
 

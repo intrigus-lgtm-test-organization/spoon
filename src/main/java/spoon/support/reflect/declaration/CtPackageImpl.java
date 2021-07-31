@@ -56,14 +56,16 @@ public class CtPackageImpl extends CtNamedElementImpl implements CtPackage {
 			}
 
 			// it already exists
-			for (CtPackage p1 : packs) {
-				if (p1.getQualifiedName().equals(pack.getQualifiedName())) {
-					addAllTypes(pack, p1);
-					addAllPackages(pack, p1);
+			return acceptSynchronized(ctPackages -> {
+				for (CtPackage p1 : ctPackages) {
+					if (p1.getQualifiedName().equals(pack.getQualifiedName())) {
+						addAllTypes(pack, p1);
+						addAllPackages(pack, p1);
 						return false;
+					}
 				}
-			}
-			return super.add(pack);
+				return super.add(pack);
+			});
 		}
 	};
 
@@ -130,12 +132,14 @@ public class CtPackageImpl extends CtNamedElementImpl implements CtPackage {
 
 	@Override
 	public CtPackage getPackage(String name) {
-		for (CtPackage p : packs) {
-			if (p.getSimpleName().equals(name)) {
-				return p;
+		return packs.acceptSynchronized(ctPackages -> {
+			for (CtPackage p : ctPackages) {
+				if (p.getSimpleName().equals(name)) {
+					return p;
+				}
 			}
-		}
-		return null;
+			return null;
+		});
 	}
 
 	@Override
@@ -155,12 +159,14 @@ public class CtPackageImpl extends CtNamedElementImpl implements CtPackage {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T extends CtType<?>> T getType(String simpleName) {
-		for (CtType<?> t : types) {
-			if (t.getSimpleName().equals(simpleName)) {
-				return (T) t;
+		return types.acceptSynchronized(ctTypes -> {
+			for (CtType<?> t : ctTypes) {
+				if (t.getSimpleName().equals(simpleName)) {
+					return (T) t;
+				}
 			}
-		}
-		return null;
+			return null;
+		});
 	}
 
 	@Override
